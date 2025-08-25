@@ -7,17 +7,19 @@ public class Tanks {
     private int price;
     private String releasedate;
     private String calibers;
+    private int amount;
 
     public Tanks() {
     }
 
-    public Tanks(String wid, String wname, String cp, int price, String releasedate, String calibers) {
+    public Tanks(String wid, String wname, String cp, int price, String releasedate, String calibers, int amount) {
         this.wid = wid;
         this.wname = wname;
         this.cp = cp;
         this.price = price;
         this.releasedate = releasedate;
         this.calibers = calibers;
+        this.amount = amount;
     }
 
     @Override
@@ -29,6 +31,7 @@ public class Tanks {
                 ", price=" + price +
                 ", releasedate='" + releasedate + '\'' +
                 ", calibers='" + calibers + '\'' +
+                ", amount=" + amount +
                 '}';
     }
 
@@ -78,5 +81,13 @@ public class Tanks {
 
     public void setCalibers(String calibers) {
         this.calibers = calibers;
+    }
+
+    public int getAmount() {
+        return amount;
+    }
+
+    public void setAmount(int amount) {
+        this.amount = amount;
     }
 }

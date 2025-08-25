@@ -1,13 +1,14 @@
 package com.itgroup.dao;
 
-import com.itgroup.DataManager;
 import com.itgroup.bean.Tanks;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.ArrayList;
 import java.util.List;
 
-public class TanksDao extends SuperDao{
+public class TanksDao extends SuperDao {
     public TanksDao() {
     }
 
@@ -19,12 +20,12 @@ public class TanksDao extends SuperDao{
 
         String sql = "select * from tanks order by wname asc";
 
-        try{
+        try {
             conn = super.getConnection();
             pstmt = conn.prepareStatement(sql);
             rs = pstmt.executeQuery();
 
-            while (rs.next()){
+            while (rs.next()) {
                 Tanks bean = new Tanks();
                 bean.setWid(rs.getString("wid"));
                 bean.setWname(rs.getString("wname"));
@@ -36,8 +37,13 @@ public class TanksDao extends SuperDao{
                 tanks.add(bean);
             }
         } catch (Exception e) {
+            try {
+                conn.rollback();
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
             e.printStackTrace();
-        }finally {
+        } finally {
             try {
                 if (rs != null) {
                     rs.close();
@@ -79,17 +85,21 @@ public class TanksDao extends SuperDao{
 
             conn.commit();
         } catch (Exception e) {
-            e.printStackTrace();
-            try{
+            try {
                 conn.rollback();
             } catch (Exception ex) {
                 ex.printStackTrace();
             }
-        }finally {
+            e.printStackTrace();
+        } finally {
             try {
-                if(pstmt != null){pstmt.close();}
-                if (conn != null){conn.close();}
-            }catch (Exception e2){
+                if (pstmt != null) {
+                    pstmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception e2) {
                 e2.printStackTrace();
             }
         }
@@ -97,6 +107,7 @@ public class TanksDao extends SuperDao{
     }
 
     public Tanks searchInfo(String wid) {
+        int cnt = -1; // 기본값 (없을 경우 구분하기 위해 -1로 설정)
         Connection conn = null;
         PreparedStatement pstmt = null;
         ResultSet rs = null;
@@ -107,11 +118,11 @@ public class TanksDao extends SuperDao{
         try {
             conn = super.getConnection();
             pstmt = conn.prepareStatement(sql);
-
             pstmt.setString(1, wid);
-            rs= pstmt.executeQuery();
 
-            if (rs.next()){
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {  // wid는 PK라서 한 건만 나옴
                 bean = new Tanks();
                 bean.setWid(rs.getString("wid"));
                 bean.setWname(rs.getString("wname"));
@@ -119,22 +130,22 @@ public class TanksDao extends SuperDao{
                 bean.setPrice(rs.getInt("price"));
                 bean.setReleasedate(rs.getString("releasedate"));
                 bean.setCalibers(rs.getString("calibers"));
+                bean.setAmount(rs.getInt("amount"));
             }
         } catch (Exception e) {
-            e.printStackTrace();
-        }finally {
             try {
-                if (rs != null) {
-                    rs.close();
-                }
-                if (pstmt != null) {
-                    pstmt.close();
-                }
-                if (conn != null) {
-                    conn.close();
-                }
-            } catch (Exception e) {
-                throw new RuntimeException(e);
+                conn.rollback();
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
             }
         }
         return bean;
@@ -164,13 +175,13 @@ public class TanksDao extends SuperDao{
             conn.commit();
 
         } catch (Exception e) {
-            e.printStackTrace();
             try {
                 conn.rollback();
             } catch (Exception ex) {
                 throw new RuntimeException(ex);
             }
-        }finally {
+            e.printStackTrace();
+        } finally {
             try {
                 if (pstmt != null) {
                     pstmt.close();
@@ -182,6 +193,80 @@ public class TanksDao extends SuperDao{
                 e.printStackTrace();
             }
 
+        }
+        return cnt;
+    }
+
+    public int checkAmount(String wid) {
+        int amount = -1; // 기본값 (없을 경우 구분하기 위해 -1로 설정)
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        String sql = "select amount from tanks where wid = ?";
+
+        try {
+            conn = super.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, wid);
+
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {  // wid는 PK라서 한 건만 나옴
+                amount = rs.getInt("amount");
+            }
+        } catch (Exception e) {
+            try {
+                conn.rollback();
+            } catch (Exception ex) {
+                throw new RuntimeException(ex);
+            }
+            e.printStackTrace();
+        } finally {
+            try {
+                if (rs != null) rs.close();
+                if (pstmt != null) pstmt.close();
+                if (conn != null) conn.close();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+        return amount;
+
+    }
+
+    public int deleteWInfo(String wid) {
+        int cnt = -1;
+        String sql = "delete from tanks where wid = ?";
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+
+        try {
+            conn = super.getConnection();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setString(1, wid);
+
+            cnt = pstmt.executeUpdate();
+
+            conn.commit();
+        } catch (Exception e) {
+            try {
+                conn.rollback();
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+            e.printStackTrace();
+        } finally {
+            try {
+                if (pstmt != null) {
+                    pstmt.close();
+                }
+                if (conn != null) {
+                    conn.close();
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
         return cnt;
     }
