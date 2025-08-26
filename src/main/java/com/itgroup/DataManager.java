@@ -1,17 +1,24 @@
 package com.itgroup;
 
+import com.itgroup.bean.Customers;
 import com.itgroup.bean.Tanks;
+import com.itgroup.dao.CustomersDao;
 import com.itgroup.dao.TanksDao;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.List;
 import java.util.Scanner;
 
 public class DataManager {
     private TanksDao tdao = null; // 실제 데이터 베이스와 연동하는 다오 클래스(생성자)
+    private CustomersDao cdao = null;
     private Scanner scan = null; // 회원 정보 입력 받기 위한 스캐너 장치
 
     public DataManager() {
         this.tdao = new TanksDao();
+        this.cdao = new CustomersDao();
         this.scan = new Scanner(System.in);
     }
 
@@ -149,6 +156,64 @@ public class DataManager {
             System.out.println("delete success");
         } else {
 
+        }
+    }
+
+    public void sellCountry() {
+        List<Customers> customers = cdao.sellCountry();
+        System.out.println("국가 이름");
+        for (Customers bean : customers){
+            String country = bean.getCountry();
+            String message = country;
+            System.out.println(message);
+        }
+    }
+
+    public void checkSellamount() {
+        System.out.println("구매국가(cid) : ");
+        String cid = scan.next();
+
+        Customers bean = cdao.checkSellamount(cid);
+        if(bean == null){
+            System.out.println("국가 확인 불가");
+        }else {
+            System.out.println("해당 국가 구매량");
+            System.out.println(bean.getOrdervolume());
+        }
+    }
+
+    public void availablePurchase() {
+        String[][] orders = {
+                {"CAN", "LEO", "800"},   // 캐나다: 레오파드 800대
+                {"PL", "K2", "500"},     // 폴란드: K2 500대
+                {"RUS", "T14", "200"},   // 러시아: T14 200대
+                {"IND", "LCL", "300"},   // 인도: Leclerc 300대
+                {"PKS", "TKX", "400"}    // 파키스탄: Type10 MBT 400대
+        };
+
+        for (String[] order : orders) {
+            String cid = order[0];
+            String tankWid = order[1];
+            int amount = Integer.parseInt(order[2]);
+
+            System.out.println("국가: " + cid + " / 전차: " + tankWid + " / 요청수량: " + amount);
+            cdao.availablePurchase(cid, tankWid, amount);
+        }
+    }
+
+    public void preferWeapon() {
+        System.out.println("국가 코드 입력(cid) : ");
+        String cid = scan.next();
+
+        List<String> weapons = cdao.preferWeapon(cid);
+
+        if (weapons.isEmpty()) {
+            System.out.println("국가: " + cid + " → 선호 무기 없음");
+        } else {
+            System.out.println("국가: " + cid + " → 선호 무기:");
+            for (String w : weapons) {
+                System.out.println("- " + w);
+            }
         }
     }
 }
